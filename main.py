@@ -30,12 +30,20 @@ def run_collection():
 
     pipeline = CollectorPipeline(db, processor=processor)
     pipeline.add_collector("cls_rss", RSSCollector(
-        name="财联社", url="https://www.cls.cn/telegraph/rss",
+        name="财联社", url="https://rsshub.app/cls/telegraph",
         category="#market",
     ).fetch)
-    pipeline.add_collector("wallstreet_rss", RSSCollector(
-        name="华尔街见闻", url="https://wallstreetcn.com/rss",
+    pipeline.add_collector("jin10_rss", RSSCollector(
+        name="金十数据", url="https://rsshub.app/jin10",
         category="#market",
+    ).fetch)
+    pipeline.add_collector("caijing_rss", RSSCollector(
+        name="财经网", url="https://rsshub.app/caijing/roll",
+        category="#macro",
+    ).fetch)
+    pipeline.add_collector("xueqiu_rss", RSSCollector(
+        name="雪球热帖", url="https://rsshub.app/xueqiu/hots",
+        category="#stock",
     ).fetch)
 
     print(f"[fin-review] Starting collection...")
@@ -76,8 +84,20 @@ def run_scheduler_daemon():
         ) if settings.anthropic_api_key else None
         pipeline = CollectorPipeline(db_local, processor=processor)
         pipeline.add_collector("cls_rss", RSSCollector(
-            name="财联社", url="https://www.cls.cn/telegraph/rss",
+            name="财联社", url="https://rsshub.app/cls/telegraph",
             category="#market",
+        ).fetch)
+        pipeline.add_collector("jin10_rss", RSSCollector(
+            name="金十数据", url="https://rsshub.app/jin10",
+            category="#market",
+        ).fetch)
+        pipeline.add_collector("caijing_rss", RSSCollector(
+            name="财经网", url="https://rsshub.app/caijing/roll",
+            category="#macro",
+        ).fetch)
+        pipeline.add_collector("xueqiu_rss", RSSCollector(
+            name="雪球热帖", url="https://rsshub.app/xueqiu/hots",
+            category="#stock",
         ).fetch)
         try:
             saved = pipeline.run_collection()
