@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}今日简报{% endblock %}
+{% block content %}
+<div class="summary">共 {{ total }} 条 · {{ today }}</div>
+
+<form class="search" action="/api/search" method="get" onsubmit="return false;">
+    <input type="text" name="q" placeholder="搜索文章..." id="search-input">
+    <button onclick="window.location.href='/api/search?q='+encodeURIComponent(document.getElementById('search-input').value)">搜索</button>
+</form>
+
+{% if high %}
+<div class="section-title" style="color:#d93025;">高重要性 (8-10)</div>
+{% for a in high %}
+<div class="article">
+    <div class="article-title"><span class="badge badge-high">{{ a.importance }}</span><a href="/article/{{ a.id }}">{{ a.title }}</a></div>
+    <div class="article-meta">{{ a.source }} · {{ a.published_at.strftime('%H:%M') }}</div>
+    <div class="article-summary">{{ a.summary }}</div>
+    <div class="article-tags">{% for t in a.tags %}<span class="tag">{{ t }}</span>{% endfor %}</div>
+</div>
+{% endfor %}
+{% endif %}
+
+{% if medium %}
+<div class="section-title" style="color:#e37400;">中重要性 (5-7)</div>
+{% for a in medium %}
+<div class="article">
+    <div class="article-title"><span class="badge badge-mid">{{ a.importance }}</span><a href="/article/{{ a.id }}">{{ a.title }}</a></div>
+    <div class="article-meta">{{ a.source }} · {{ a.published_at.strftime('%H:%M') }}</div>
+    <div class="article-summary">{{ a.summary }}</div>
+    <div class="article-tags">{% for t in a.tags %}<span class="tag">{{ t }}</span>{% endfor %}</div>
+</div>
+{% endfor %}
+{% endif %}
+
+{% if low %}
+<div class="section-title" style="color:#5f6368;">一般 (1-4)</div>
+{% for a in low %}
+<div class="article">
+    <div class="article-title"><span class="badge badge-low">{{ a.importance }}</span><a href="/article/{{ a.id }}">{{ a.title }}</a></div>
+    <div class="article-meta">{{ a.source }} · {{ a.published_at.strftime('%H:%M') }}</div>
+    <div class="article-summary">{{ a.summary }}</div>
+    <div class="article-tags">{% for t in a.tags %}<span class="tag">{{ t }}</span>{% endfor %}</div>
+</div>
+{% endfor %}
+{% endif %}
+
+{% if total == 0 %}
+<p style="text-align:center;color:#999;margin-top:60px;">暂无内容，等待下次采集...</p>
+{% endif %}
+{% endblock %}

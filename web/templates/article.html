@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}{{ a.title }}{% endblock %}
+{% block content %}
+<a href="/" class="back">← 返回简报</a>
+
+<div class="article" style="padding:24px;">
+    {% if a.importance >= 8 %}
+    <span class="badge badge-high">{{ a.importance }}</span>
+    {% elif a.importance >= 5 %}
+    <span class="badge badge-mid">{{ a.importance }}</span>
+    {% else %}
+    <span class="badge badge-low">{{ a.importance }}</span>
+    {% endif %}
+
+    <h2 style="margin:12px 0;">{{ a.title }}</h2>
+    <div style="color:#999;font-size:14px;margin-bottom:16px;">
+        {{ a.source }} · {{ a.published_at.strftime('%Y-%m-%d %H:%M') }}
+    </div>
+
+    <div style="margin-bottom:16px;">
+        <strong>摘要：</strong>{{ a.summary }}
+    </div>
+
+    {% if a.reason %}
+    <div style="margin-bottom:16px;font-size:14px;color:#666;">
+        <strong>重要性说明：</strong>{{ a.reason }}
+    </div>
+    {% endif %}
+
+    <div class="article-tags" style="margin-bottom:16px;">
+        {% for t in a.tags %}<span class="tag">{{ t }}</span>{% endfor %}
+        <span class="tag" style="background:#f3e8fd;color:#7c3aed;">{{ a.category }}</span>
+    </div>
+
+    <a href="{{ a.url }}" target="_blank" class="article-link">查看原文 →</a>
+</div>
+{% endblock %}
