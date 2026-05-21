@@ -1,16 +1,52 @@
 import argparse
+import json
 import os
+from datetime import datetime
+
+import requests
 
 from config.settings import Settings
 from storage.db import Database
 
 from collector.sources.rss import RSSCollector
+from collector.sources.base import ArticleItem
 from collector.scheduler import CollectorPipeline
 
 from processor.processor import Processor
 
 from cli.main import main as cli_main
 from web.app import create_app
+
+
+def sina_finance_fetch():
+    """Fetch financial news from Sina finance API."""
+    headers = {"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)"}
+    resp = requests.get(
+        "https://feed.mix.sina.com.cn/api/roll/get?pageid=153&lid=2509&num=20",
+        headers=headers, timeout=15,
+    )
+    data = resp.json()
+    items = []
+    for entry in data.get("result", {}).get("data", []):
+        title = entry.get("title", "")
+        url = entry.get("url", "") or entry.get("link", "")
+        ctime = entry.get("ctime", "")
+        pub_date = datetime.now()
+        if ctime:
+            try:
+                pub_date = datetime.fromtimestamp(int(ctime))
+            except (ValueError, OSError):
+                pass
+        if title and url:
+            items.append(ArticleItem(
+                title=title,
+                url=url,
+                source="新浪财经",
+                category="#market",
+                published_at=pub_date,
+                summary=entry.get("intro", ""),
+            ))
+    return items
 
 
 def run_collection():
@@ -29,22 +65,7 @@ def run_collection():
         )
 
     pipeline = CollectorPipeline(db, processor=processor)
-    pipeline.add_collector("cls_rss", RSSCollector(
-        name="财联社", url="https://rsshub.app/cls/telegraph",
-        category="#market",
-    ).fetch)
-    pipeline.add_collector("jin10_rss", RSSCollector(
-        name="金十数据", url="https://rsshub.app/jin10",
-        category="#market",
-    ).fetch)
-    pipeline.add_collector("caijing_rss", RSSCollector(
-        name="财经网", url="https://rsshub.app/caijing/roll",
-        category="#macro",
-    ).fetch)
-    pipeline.add_collector("xueqiu_rss", RSSCollector(
-        name="雪球热帖", url="https://rsshub.app/xueqiu/hots",
-        category="#stock",
-    ).fetch)
+    pipeline.add_collector("sina", sina_finance_fetch)
 
     print(f"[fin-review] Starting collection...")
     saved = pipeline.run_collection()
@@ -83,22 +104,7 @@ def run_scheduler_daemon():
             batch_size=settings.llm_batch_size,
         ) if settings.anthropic_api_key else None
         pipeline = CollectorPipeline(db_local, processor=processor)
-        pipeline.add_collector("cls_rss", RSSCollector(
-            name="财联社", url="https://rsshub.app/cls/telegraph",
-            category="#market",
-        ).fetch)
-        pipeline.add_collector("jin10_rss", RSSCollector(
-            name="金十数据", url="https://rsshub.app/jin10",
-            category="#market",
-        ).fetch)
-        pipeline.add_collector("caijing_rss", RSSCollector(
-            name="财经网", url="https://rsshub.app/caijing/roll",
-            category="#macro",
-        ).fetch)
-        pipeline.add_collector("xueqiu_rss", RSSCollector(
-            name="雪球热帖", url="https://rsshub.app/xueqiu/hots",
-            category="#stock",
-        ).fetch)
+        pipeline.add_collector("sina", sina_finance_fetch)
         try:
             saved = pipeline.run_collection()
             print(f"[scheduler] Collected {saved} articles")
